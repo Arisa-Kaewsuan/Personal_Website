@@ -70,7 +70,7 @@ export default function Home() {
 
         <p className="mt-6">
           I am a driven full-stack developer with hands-on experience in RESTful
-          APIs, Node.js, React, MongoDB, and PostgreSQL. I'm seeking a junior
+          APIs, Node.js, React, MongoDB, and PostgreSQL. I&apos;m seeking a junior
           full-stack role where I can contribute to building scalable, reliable
           web applications and write clean, maintainable code that supports
           company growth. I live in Trang, Thailand but am open to relocating.
