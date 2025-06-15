@@ -60,7 +60,7 @@ export default function Home() {
           </div>
 
           <div>
-            <h1 className="font-semibold text-2xl mt-2">Hi, I'm Maple 👋</h1>
+            <h1 className="font-semibold text-2xl mt-2">Hi, I&apos;m Maple 👋</h1>
             <div className="flex flex-row items-center gap-4 mt-2">
               <div className="bg-green-500 w-2 h-2 rounded-full "></div>
               <p>Open to Work</p>
