@@ -1,0 +1,201 @@
+// prisma/schema.prisma - Complete Schema
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  image         String?
+  role          Role      @default(USER)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  // Relations
+  posts         Post[]
+  projects      Project[]
+  comments      Comment[]
+  chatMessages  ChatMessage[]
+  accounts      Account[]
+  sessions      Session[]
+  
+  @@map("users")
+}
+
+model Post {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  content     String
+  excerpt     String?
+  coverImage  String?
+  published   Boolean  @default(false)
+  publishedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // SEO fields
+  metaTitle       String?
+  metaDescription String?
+  
+  // Relations
+  authorId    String
+  author      User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  tags        Tag[]     @relation("PostTags")
+  comments    Comment[]
+  
+  @@map("posts")
+}
+
+model Project {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  description String
+  content     String
+  coverImage  String?
+  demoUrl     String?
+  githubUrl   String?
+  published   Boolean  @default(false)
+  featured    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  authorId    String
+  author      User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  tags        Tag[] @relation("ProjectTags")
+  
+  @@map("projects")
+}
+
+model Tag {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  slug      String   @unique
+  color     String?  @default("#3b82f6")
+  createdAt DateTime @default(now())
+  
+  // Relations
+  posts    Post[]    @relation("PostTags")
+  projects Project[] @relation("ProjectTags")
+  
+  @@map("tags")
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  postId   String
+  post     Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  authorId String
+  author   User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  
+  // Self-referencing for nested comments
+  parentId String?
+  parent   Comment?  @relation("CommentReplies", fields: [parentId], references: [id])
+  replies  Comment[] @relation("CommentReplies")
+  
+  @@map("comments")
+}
+
+model ChatMessage {
+  id        String      @id @default(cuid())
+  content   String
+  type      MessageType @default(TEXT)
+  createdAt DateTime    @default(now())
+  
+  // Relations
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  // Bot or User message
+  isBot Boolean @default(false)
+  
+  @@map("chat_messages")
+}
+
+model LineNotification {
+  id          String   @id @default(cuid())
+  userId      String?
+  lineUserId  String?
+  message     String
+  sent        Boolean  @default(false)
+  sentAt      DateTime?
+  createdAt   DateTime @default(now())
+  
+  // Notification type
+  type        NotificationType @default(GENERAL)
+  
+  @@map("line_notifications")
+}
+
+// NextAuth.js required models
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// Enums
+enum Role {
+  USER
+  ADMIN
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  FILE
+}
+
+enum NotificationType {
+  GENERAL
+  NEW_POST
+  NEW_COMMENT
+  NEW_PROJECT
+  CONTACT_FORM
+}
